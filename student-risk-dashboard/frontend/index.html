@@ -1,31 +1,197 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Risk Dashboard | AI Early Warning System</title>
-    <meta name="description" content="Identify students who may be at risk of dropping out using an AI Early Warning System.">
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- React & ReactDOM -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Early Warning System</title>
 
-    <!-- UI Icons -->
-    <script src="https://unpkg.com/feather-icons"></script>
-    
-    <!-- Babel Standalone (transpiles JSX in browser for development without Node MVP) -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="/assets/index.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+
 </head>
-<body>
-    <div id="root"></div>
-    <!-- Load App -->
-    <script type="text/babel" src="/assets/app.jsx"></script>
+
+<body class="bg-gradient-to-b from-purple-900 to-purple-300 min-h-screen text-white font-sans">
+
+<header class="p-6">
+<h1 class="text-3xl md:text-4xl font-black tracking-tighter">STUDENT RISK DASHBOARD</h1>
+<p class="text-purple-200 mt-2 font-extrabold italic">ANNA UNIVERSITY</p>
+</header>
+
+<div class="max-w-7xl mx-auto p-6 space-y-6">
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+
+<div class="md:col-span-1 flex flex-col gap-4">
+
+<div class="bg-gradient-to-r from-red-600 to-red-500 p-4 rounded-xl shadow-lg border-l-8 border-red-900">
+<h2 class="text-xs font-black uppercase tracking-widest">High Risk</h2>
+<p class="text-4xl font-black mt-1">5</p>
+</div>
+
+<div class="bg-gradient-to-r from-yellow-500 to-yellow-400 p-4 rounded-xl shadow-lg border-l-8 border-yellow-700 text-black">
+<h2 class="text-xs font-black uppercase tracking-widest">Medium Risk</h2>
+<p class="text-4xl font-black mt-1">12</p>
+</div>
+
+<div class="bg-gradient-to-r from-green-600 to-green-500 p-4 rounded-xl shadow-lg border-l-8 border-green-900">
+<h2 class="text-xs font-black uppercase tracking-widest">Low Risk</h2>
+<p class="text-4xl font-black mt-1">18</p>
+</div>
+
+</div>
+
+<div class="md:col-span-3 bg-gradient-to-br from-purple-900 to-violet-700 p-8 rounded-xl shadow-2xl border-2 border-purple-400 flex flex-col justify-center">
+
+<h2 class="text-2xl font-black mb-2 uppercase">Student Data Ingestion</h2>
+<p class="text-purple-200 mb-6 font-bold">
+Import CSV or Excel files to update the risk engine.
+</p>
+
+<div class="flex flex-col md:flex-row gap-4 items-center">
+
+<input type="file"
+class="flex-1 border-4 border-dashed border-purple-300 p-6 rounded-2xl bg-white text-black font-black w-full cursor-pointer">
+
+<button class="bg-black hover:bg-purple-900 text-white font-black px-10 py-6 rounded-2xl shadow-xl text-lg transform hover:scale-105">
+UPLOAD DATA
+</button>
+
+</div>
+</div>
+</div>
+
+<div class="bg-white p-8 rounded-2xl shadow-2xl overflow-x-auto border-t-8 border-purple-700">
+
+<h2 class="text-2xl font-black mb-6 text-purple-950 uppercase">
+Student Risk Overview
+</h2>
+
+<table class="w-full text-black border-collapse">
+
+<thead>
+<tr class="bg-purple-950 text-white">
+<th class="p-4 border text-left">Student</th>
+<th class="p-4 border text-center">Class</th>
+<th class="p-4 border text-center">Score</th>
+<th class="p-4 border text-center">Level</th>
+<th class="p-4 border text-left">Key Factor</th>
+</tr>
+</thead>
+
+<tbody>
+
+<tr class="hover:bg-purple-50">
+<td class="p-4 border font-bold text-purple-900">Ravi Kumar</td>
+<td class="p-4 border text-center">10</td>
+<td class="p-4 border text-center">78</td>
+<td class="p-4 border text-red-600 text-center font-bold">HIGH</td>
+<td class="p-4 border italic">Low Attendance</td>
+</tr>
+
+<tr class="hover:bg-purple-50">
+<td class="p-4 border font-bold text-purple-900">Anita</td>
+<td class="p-4 border text-center">9</td>
+<td class="p-4 border text-center">45</td>
+<td class="p-4 border text-yellow-600 text-center font-bold">MEDIUM</td>
+<td class="p-4 border italic">Poor Grades</td>
+</tr>
+
+<tr class="hover:bg-purple-50">
+<td class="p-4 border font-bold text-purple-900">Imran</td>
+<td class="p-4 border text-center">10</td>
+<td class="p-4 border text-center">22</td>
+<td class="p-4 border text-green-600 text-center font-bold">LOW</td>
+<td class="p-4 border italic">Stable</td>
+</tr>
+
+</tbody>
+</table>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+<div class="bg-gradient-to-br from-pink-500 via-purple-400 to-purple-600 p-8 rounded-2xl shadow-lg text-white">
+
+<h2 class="text-xl font-black mb-4 uppercase">
+Intervention Playbook
+</h2>
+
+<ul class="space-y-3">
+
+<li class="bg-white bg-opacity-10 p-4 rounded-xl flex items-center gap-3">
+<span class="text-2xl">➔</span> Counseling Session
+</li>
+
+<li class="bg-white bg-opacity-10 p-4 rounded-xl flex items-center gap-3">
+<span class="text-2xl">➔</span> Parent Meeting
+</li>
+
+<li class="bg-white bg-opacity-10 p-4 rounded-xl flex items-center gap-3">
+<span class="text-2xl">➔</span> Academic Support
+</li>
+
+<li class="bg-white bg-opacity-10 p-4 rounded-xl flex items-center gap-3">
+<span class="text-2xl">➔</span> Behavioral Monitoring
+</li>
+
+</ul>
+</div>
+
+<div class="bg-white p-8 rounded-2xl shadow-lg border-2 border-purple-200">
+
+<h2 class="text-xl font-black mb-4 text-purple-950 uppercase text-center">
+Risk Distribution
+</h2>
+
+<div style="height:250px;">
+<canvas id="riskChart"></canvas>
+</div>
+
+</div>
+</div>
+
+</div>
+
+<footer class="text-center p-10 mt-12 bg-black text-white font-black tracking-[0.2em] uppercase text-sm">
+AI Early Warning System • ANNA UNIVERSITY • 2026
+</footer>
+
+<script>
+window.onload = function(){
+
+const ctx = document.getElementById('riskChart');
+
+new Chart(ctx,{
+type:'doughnut',
+
+data:{
+labels:['High Risk','Medium Risk','Low Risk'],
+
+datasets:[{
+data:[5,12,18],
+backgroundColor:['#dc2626','#eab308','#16a34a'],
+borderWidth:5,
+borderColor:'#ffffff'
+}]
+},
+
+options:{
+responsive:true,
+maintainAspectRatio:false,
+plugins:{
+legend:{
+position:'bottom'
+}
+}
+}
+
+});
+
+}
+</script>
+
 </body>
 </html>
+
