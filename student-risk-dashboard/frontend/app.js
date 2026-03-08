@@ -57,7 +57,46 @@ function checkSchemes() {
     alert("Checking eligible government schemes for the student...");
 }
 
+async function loadAnalyticsPreview() {
+    const container = document.getElementById("analyticsContainer");
+    if (!container) return;
+    
+    try {
+        const response = await fetch(`${API_BASE}/analytics/interventions`);
+        if (!response.ok) throw new Error("Failed");
+        const data = await response.json();
+        
+        if (!data || data.length === 0 || data.message === "No evaluated data yet") {
+            container.innerHTML = "No outcome data yet. Check back later.";
+            return;
+        }
+        
+        const top = data[0];
+        container.innerHTML = `
+            <div class="flex flex-col gap-2 text-left">
+                <div class="flex justify-between items-center bg-green-50 p-3 rounded-lg border border-green-100">
+                    <span class="font-black text-green-900 uppercase text-xs">Top Action:</span>
+                    <span class="font-bold text-green-700 text-sm">${top.intervention}</span>
+                </div>
+                <div class="flex justify-between items-center bg-indigo-50 p-3 rounded-lg border border-indigo-100">
+                    <span class="font-black text-indigo-900 uppercase text-xs">Success Rate:</span>
+                    <span class="font-bold text-indigo-700 text-sm">${top.success_rate}%</span>
+                </div>
+                <div class="flex justify-between items-center bg-rose-50 p-3 rounded-lg border border-rose-100">
+                    <span class="font-black text-rose-900 uppercase text-xs">Avg Boost:</span>
+                    <span class="font-bold text-rose-700 text-sm">+${top.avg_attendance_improvement}%</span>
+                </div>
+                <a href="analytics.html" class="mt-4 block text-center text-[10px] font-black tracking-widest text-indigo-600 hover:text-indigo-800 uppercase underline">View Full View &rarr;</a>
+            </div>
+        `;
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = "Failed to load analytics preview.";
+    }
+}
+
 document.addEventListener("DOMContentLoaded", function(){
+    loadAnalyticsPreview();
     const buttons = document.querySelectorAll("button");
     
     buttons.forEach(btn => {

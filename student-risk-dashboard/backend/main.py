@@ -162,6 +162,9 @@ def get_students(risk_level: str = None, grade_class: str = None, attendance: st
             students = [s for s in students if s.attendance_pct > 90]
             
     return students
+
+def to_dict(obj):
+    return {c.name: getattr(obj, c.name) for c in obj.__table__.columns}
     
 @app.get("/api/students/{id}")
 def get_student_detail(id: int, db: Session = Depends(get_db)):
@@ -171,23 +174,7 @@ def get_student_detail(id: int, db: Session = Depends(get_db)):
 
     raw_interventions = db.query(Intervention).filter(Intervention.student_id == student.id).all()
     interventions = []
-    for inv in raw_interventions:
-        inv_dict = {
-            "id": inv.id,
-            "date": inv.date,
-            "intervention_type": inv.intervention_type,
-            "teacher_name": inv.teacher_name,
-            "notes": inv.notes,
-            "baseline_attendance_pct": inv.baseline_attendance_pct,
-            "baseline_exam_score": inv.baseline_exam_score,
-            "baseline_midday_meal": inv.baseline_midday_meal,
-            "baseline_meal_participation_pct": inv.baseline_meal_participation_pct,
-            "baseline_risk_score": inv.baseline_risk_score,
-        }
-        # attach evaluation/outcome info if available
-        inv_dict.update(evaluate_intervention(inv, student))
-        interventions.append(inv_dict)
-
+    
     # Calculate cohort comparisons
     all_students = db.query(Student).all()
     avg_att = sum(s.attendance_pct for s in all_students) / len(all_students) if all_students else 0
@@ -202,14 +189,11 @@ def get_student_detail(id: int, db: Session = Depends(get_db)):
         "benchmarks": [88, 74, 2.5, 85]
     }
 
-    # Refresh outcomes for pending interventions older than 30 days (Simulated: any intervention > 1 min for demo)
-    import datetime
-    for inv in interventions:
+    # Evaluate outcomes for pending interventions older than 30 days
+    # For demo purposes, we automatically evaluate any pending intervention.
+    for inv in raw_interventions:
         if not inv.is_evaluated and inv.date:
             try:
-                # In real scenario, check date > 30 days
-                # For demo, if it exists, let's allow "evaluating" it
-                # Logic: Compare current student state to baseline
                 deltas = {
                     "attendance": student.attendance_pct - (inv.baseline_attendance or 0),
                     "score": student.latest_exam_score - (inv.baseline_score or 0),
@@ -235,13 +219,15 @@ def get_student_detail(id: int, db: Session = Depends(get_db)):
                 inv.outcome_risk_score = student.risk_score
                 inv.is_evaluated = True
                 db.add(inv)
+                db.commit()
             except Exception as e:
                 print(f"Eval error: {e}")
-    db.commit()
+                
+        interventions.append(to_dict(inv))
 
     return {
         "student": to_dict(student),
-        "interventions": [to_dict(i) for i in interventions],
+        "interventions": interventions,
         "comparison": comparison
     }
 
@@ -297,11 +283,55 @@ def log_intervention(id: int, payload: dict, db: Session = Depends(get_db)):
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
         
-    inv = Intervention(student_id=id, date=payload.get("date"), action=payload.get("action"))
+    inv = Intervention(
+        student_id=id, 
+        date=payload.get("date"), 
+        action=payload.get("action"),
+        teacher_name=payload.get("teacher_name"),
+        notes=payload.get("notes"),
+        # Capture Baselines
+        baseline_attendance=student.attendance_pct,
+        baseline_score=student.latest_exam_score,
+        baseline_meal_pct=student.meal_participation_pct,
+        baseline_risk_score=student.risk_score,
+        outcome_status="Pending",
+        is_evaluated=False
+    )
     db.add(inv)
     db.commit()
     db.refresh(inv)
     return inv
+
+@app.get("/api/analytics/interventions")
+def get_intervention_analytics(db: Session = Depends(get_db)):
+    interventions = db.query(Intervention).filter(Intervention.is_evaluated == True).all()
+    if not interventions:
+        return []
+    
+    # Group by action
+    stats = {}
+    for inv in interventions:
+        action = inv.action
+        if action not in stats:
+            stats[action] = {"count": 0, "improved": 0, "total_att_gain": 0}
+        
+        stats[action]["count"] += 1
+        if inv.outcome_status == "Improved":
+            stats[action]["improved"] += 1
+        
+        att_gain = (inv.outcome_attendance or 0) - (inv.baseline_attendance or 0)
+        stats[action]["total_att_gain"] += att_gain
+        
+    result = []
+    for action, data in stats.items():
+        result.append({
+            "intervention": action,
+            "success_rate": round((data["improved"] / data["count"]) * 100, 1),
+            "avg_attendance_improvement": round(data["total_att_gain"] / data["count"], 1),
+            "total_logs": data["count"]
+        })
+        
+    return sorted(result, key=lambda x: x['success_rate'], reverse=True)
 
 # Serve frontend static files
 app.mount("/", StaticFiles(directory="../frontend", html=True), name="frontend")

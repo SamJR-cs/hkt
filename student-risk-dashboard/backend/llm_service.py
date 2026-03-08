@@ -33,6 +33,11 @@ def generate_explanation(student_name: str, score: int, level: str, top_factors:
     {avg_text}
     
     When explaining, compare the student to the class average and the successful student benchmarks to provide context.
+    
+    CRITICAL INSTRUCTION:
+    Finally, you must recommend a specific intervention from this exact menu of evidence-based options: 
+    [Home Visit, Counselling Session, Scholarship Application, Peer Buddy Assignment].
+    Select the single most appropriate intervention and briefly justify why it has the highest likelihood of success for this student's specific risk profile.
     """
     
     if client:
@@ -116,6 +121,14 @@ def _generate_mock_explanation(student_name: str, score: int, level: str, top_fa
         
         bench_score = benchmarks.get('score', 0)
         # Note: exams score is not passed to this helper yet, let's keep it simple or update signature
+        
+    # Mock recommendation
+    if "attendance" in top_factors.lower():
+        explanation += "\n\nRecommended Intervention: Home Visit. This is highly recommended to understand the root causes of the student's absence and engage the parents."
+    elif "exam" in top_factors.lower() or "score" in top_factors.lower():
+        explanation += "\n\nRecommended Intervention: Peer Buddy Assignment. Pairing the student with a high-performing peer can provide localized academic support."
+    else:
+        explanation += "\n\nRecommended Intervention: Counselling Session. This will help identify any underlying personal or academic challenges."
         
     return explanation
 
