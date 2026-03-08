@@ -15,6 +15,7 @@ class Student(Base):
     previous_exam_score = Column(Float)
     distance_km = Column(Float)
     midday_meal = Column(Boolean)
+    meal_participation_pct = Column(Float, default=0.0)
     sibling_dropout = Column(Boolean)
     
     # ML predicted fields

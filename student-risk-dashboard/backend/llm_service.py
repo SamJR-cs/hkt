@@ -17,6 +17,7 @@ def generate_explanation(student_name: str, score: int, level: str, top_factors:
         - Attendance: Student {attendance}%, Class Avg {class_avg.get('attendance') or 'N/A'}%, Benchmark {benchmarks.get('attendance') or '88'}%
         - Exam Score: Student {exams}, Class Avg {class_avg.get('score') or 'N/A'}, Benchmark {benchmarks.get('score') or '74'}
         - Distance: Student {class_avg.get('student_dist') or 'N/A'}km, Class Avg {class_avg.get('distance') or 'N/A'}km, Benchmark {benchmarks.get('distance') or '2.5'}km
+        - Meal Participation: Student {class_avg.get('meal_participation_pct') or 'N/A'}%, Class Avg {class_avg.get('meal') or 'N/A'}%, Benchmark {benchmarks.get('meal') or '85'}%
         """
 
     prompt = f"""

@@ -60,7 +60,8 @@ async def upload_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
     # Required columns basic check
     required_cols = ['Student ID', 'Student Name', 'Class / Grade', 'Attendance Percentage', 
                      'Latest Exam Score', 'Previous Exam Score', 'Distance from School (km)', 
-                     'Midday Meal Participation (Yes/No)', 'Sibling Dropout History (Yes/No)']
+                     'Midday Meal Participation (Yes/No)', 'Midday Meal Participation Rate (%)',
+                     'Sibling Dropout History (Yes/No)']
                      
     if not all(col in df.columns for col in required_cols):
         raise HTTPException(status_code=400, detail="Missing required columns in CSV")
@@ -72,6 +73,7 @@ async def upload_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
             'previous_exam_score': float(row['Previous Exam Score']),
             'distance_km': float(row['Distance from School (km)']),
             'midday_meal': str(row['Midday Meal Participation (Yes/No)']).strip().lower() == 'yes',
+            'meal_participation_pct': float(row['Midday Meal Participation Rate (%)']),
             'sibling_dropout': str(row['Sibling Dropout History (Yes/No)']).strip().lower() == 'yes'
         }
         
@@ -84,11 +86,17 @@ async def upload_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
             avg_att = sum(s.attendance_pct for s in all_students) / len(all_students)
             avg_score = sum(s.latest_exam_score for s in all_students) / len(all_students)
             avg_dist = sum(s.distance_km for s in all_students) / len(all_students)
+            avg_meal = sum(s.meal_participation_pct for s in all_students) / len(all_students)
         else:
-            avg_att, avg_score, avg_dist = student_data['attendance_pct'], student_data['latest_exam_score'], student_data['distance_km']
+            avg_att, avg_score, avg_dist, avg_meal = student_data['attendance_pct'], student_data['latest_exam_score'], student_data['distance_km'], student_data['meal_participation_pct']
 
-        class_avg = {"attendance": round(avg_att, 1), "score": round(avg_score, 1), "distance": round(avg_dist, 1)}
-        benchmarks = {"attendance": 88, "score": 74, "distance": 2.5}
+        class_avg = {
+            "attendance": round(avg_att, 1), 
+            "score": round(avg_score, 1), 
+            "distance": round(avg_dist, 1),
+            "meal": round(avg_meal, 1)
+        }
+        benchmarks = {"attendance": 88, "score": 74, "distance": 2.5, "meal": 85}
 
         # LLM Explanation
         explanation = generate_explanation(
@@ -115,6 +123,7 @@ async def upload_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
         student.previous_exam_score = student_data['previous_exam_score']
         student.distance_km = student_data['distance_km']
         student.midday_meal = student_data['midday_meal']
+        student.meal_participation_pct = student_data['meal_participation_pct']
         student.sibling_dropout = student_data['sibling_dropout']
         
         student.risk_score = pred['score']
@@ -160,12 +169,13 @@ def get_student_detail(id: int, db: Session = Depends(get_db)):
     avg_att = sum(s.attendance_pct for s in all_students) / len(all_students) if all_students else 0
     avg_score = sum(s.latest_exam_score for s in all_students) / len(all_students) if all_students else 0
     avg_dist = sum(s.distance_km for s in all_students) / len(all_students) if all_students else 0
+    avg_meal = sum(s.meal_participation_pct for s in all_students) / len(all_students) if all_students else 0
 
     comparison = {
-        "metrics": ["Attendance", "Exam Score", "Distance"],
-        "student": [student.attendance_pct, student.latest_exam_score, student.distance_km],
-        "class_avg": [round(avg_att, 1), round(avg_score, 1), round(avg_dist, 1)],
-        "benchmarks": [88, 74, 2.5]
+        "metrics": ["Attendance", "Exam Score", "Distance", "Meal Participation"],
+        "student": [student.attendance_pct, student.latest_exam_score, student.distance_km, student.meal_participation_pct],
+        "class_avg": [round(avg_att, 1), round(avg_score, 1), round(avg_dist, 1), round(avg_meal, 1)],
+        "benchmarks": [88, 74, 2.5, 85]
     }
 
     return {

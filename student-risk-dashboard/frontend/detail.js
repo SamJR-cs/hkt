@@ -15,7 +15,7 @@ async function fetchStudentDetails() {
         if (!response.ok) throw new Error("Failed to fetch student details");
         
         const data = await response.json();
-        renderDetail(data.student);
+        renderDetail(data);
     } catch (error) {
         console.error("Error fetching details:", error);
         document.getElementById('loadingState').innerHTML = `
@@ -24,7 +24,8 @@ async function fetchStudentDetails() {
     }
 }
 
-function renderDetail(student) {
+function renderDetail(data) {
+    const student = data.student;
     document.getElementById('loadingState').classList.add('hidden');
     document.getElementById('studentDetail').classList.remove('hidden');
 
@@ -39,6 +40,28 @@ function renderDetail(student) {
 
     document.getElementById('disp_level').innerText = student.risk_level;
     document.getElementById('disp_score').innerText = `${student.risk_score}/100`;
+
+    // Meal Participation UI
+    const mealPct = student.meal_participation_pct || 0;
+    document.getElementById('disp_meal_pct').innerText = `${mealPct}%`;
+    const circle = document.getElementById('meal_circle');
+    const radius = 35;
+    const circumference = 2 * Math.PI * radius;
+    circle.style.strokeDasharray = `${circumference} ${circumference}`;
+    const offset = circumference - (mealPct / 100) * circumference;
+    circle.style.strokeDashoffset = offset;
+
+    const mealLabel = document.getElementById('meal_status_label');
+    if (mealPct < 50) {
+        mealLabel.innerText = "🔴 Low Engagement";
+        mealLabel.className = "mt-4 text-[10px] font-black uppercase text-red-600 tracking-widest";
+    } else if (mealPct < 80) {
+        mealLabel.innerText = "🟡 Moderate Engagement";
+        mealLabel.className = "mt-4 text-[10px] font-black uppercase text-yellow-600 tracking-widest";
+    } else {
+        mealLabel.innerText = "🟢 High Engagement";
+        mealLabel.className = "mt-4 text-[10px] font-black uppercase text-green-600 tracking-widest";
+    }
 
     const riskBox = document.getElementById('risk_color_box');
     if (student.risk_level === 'High') {
@@ -104,8 +127,13 @@ function renderComparison(comparison) {
         
         // Logical Indicator
         let indicator = "🔴";
-        if (sVal >= bVal) indicator = "🟢";
-        else if (sVal >= cVal) indicator = "🟡";
+        if (metric === 'Distance') {
+            if (sVal <= bVal) indicator = "🟢";
+            else if (sVal <= cVal) indicator = "🟡";
+        } else {
+            if (sVal >= bVal) indicator = "🟢";
+            else if (sVal >= cVal) indicator = "🟡";
+        }
 
         const unit = metric === 'Attendance' ? '%' : (metric === 'Distance' ? ' km' : '');
 

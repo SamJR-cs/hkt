@@ -12,7 +12,7 @@ class DropoutModel:
             'latest_exam_score', 
             'previous_exam_score',
             'distance_km',
-            'midday_meal',
+            'meal_participation_pct',
             'sibling_dropout'
         ]
         
@@ -26,22 +26,23 @@ class DropoutModel:
             'latest_exam_score': np.random.uniform(30, 100, n),
             'previous_exam_score': np.random.uniform(30, 100, n),
             'distance_km': np.random.uniform(1, 15, n),
-            'midday_meal': np.random.choice([0, 1], n),
+            'meal_participation_pct': np.random.uniform(20, 100, n),
             'sibling_dropout': np.random.choice([0, 1], n, p=[0.8, 0.2]),
         }
         df = pd.DataFrame(data)
         
         # Determine dropout (highly simplified logic for MVP)
-        # High risk if attendance < 65, scores declining or low, sibling dropout
+        # High risk if attendance < 65, scores declining or low, sibling dropout, low meal participation
         risk = (
             ((df['attendance_pct'] < 70).astype(int) * 2) +
             ((df['latest_exam_score'] < 50).astype(int) * 1.5) +
             (df['sibling_dropout'] * 2) +
-            ((df['distance_km'] > 8).astype(int) * 1)
+            ((df['distance_km'] > 8).astype(int) * 1) +
+            ((df['meal_participation_pct'] < 50).astype(int) * 1.5)
         )
         
         # Probability of dropout
-        prob = np.clip(risk / 6.5, 0, 1)
+        prob = np.clip(risk / 8.0, 0, 1)
         
         # 1 means dropped out, 0 means not
         y = (np.random.random(n) < prob).astype(int)
@@ -63,7 +64,7 @@ class DropoutModel:
             'latest_exam_score': student_data['latest_exam_score'],
             'previous_exam_score': student_data['previous_exam_score'],
             'distance_km': student_data['distance_km'],
-            'midday_meal': 1 if student_data['midday_meal'] else 0,
+            'meal_participation_pct': student_data['meal_participation_pct'],
             'sibling_dropout': 1 if student_data['sibling_dropout'] else 0
         }])
         
@@ -81,7 +82,6 @@ class DropoutModel:
             
         # Extract local feature importances by multiplying global importance
         # with the "badness" of the student's feature (simple heuristic for MVP)
-        # Or simply use global feature importances for this MVP snippet
         importances = self.model.feature_importances_
         feature_scores = {}
         
@@ -92,6 +92,8 @@ class DropoutModel:
             feature_scores['Low Exam Scores'] = importances[1] * 2
         if student_data['distance_km'] > 5:
             feature_scores['Long Commute'] = importances[3] * 1.5
+        if student_data['meal_participation_pct'] < 60:
+            feature_scores['Low Meal Participation'] = importances[4] * 2
         if student_data['sibling_dropout']:
             feature_scores['Sibling Dropout History'] = importances[5] * 3
             
@@ -100,7 +102,7 @@ class DropoutModel:
             feature_scores = {
                 'Attendance Level': importances[0],
                 'Academic Performance': importances[1],
-                'Commute Distance': importances[3]
+                'Meal Engagement': importances[4]
             }
             
         # Sort by importance and get top 3
