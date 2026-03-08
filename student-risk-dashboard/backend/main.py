@@ -17,7 +17,11 @@ from intervention_engine import intervention_engine
 from scheme_matcher import scheme_matcher
 
 # DB Setup
-SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
+if os.environ.get("VERCEL"):
+    SQLALCHEMY_DATABASE_URL = "sqlite:////tmp/sql_app.db"
+else:
+    SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
+
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

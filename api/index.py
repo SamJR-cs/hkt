@@ -1,7 +1,12 @@
-import sys
 import os
+import sys
 
-# Add the project directory to sys.path to allow importing from nested folders
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "student-risk-dashboard", "backend"))
+# Ensure the backend directory is in the path
+backend_path = os.path.join(os.path.dirname(__file__), "..", "student-risk-dashboard", "backend")
+sys.path.append(backend_path)
 
-from main import app
+# Import the FastAPI app from main.py
+from main import app as application
+
+# This exposes the FastAPI app to Vercel
+app = application
